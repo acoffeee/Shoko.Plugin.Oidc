@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>User Mappings | Shoko</title>
+<style nonce="{{nonce}}">
+  :root { color-scheme: light dark; --bg: #f4f5f7; --card: #fff; --text: #1d2024; --muted: #5d636b; --border: #d9dce1; --accent: #2f6fde; --danger: #c93838; --ok: #2e8b57; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #16181c; --card: #1f2227; --text: #e6e8eb; --muted: #9aa1aa; --border: #33373e; --accent: #5b8ff0; --danger: #e05d5d; --ok: #4cb37a; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 1.25rem; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; }
+  h1 { margin: 0; font-size: 1.35rem; }
+  h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+  p { margin: 0 0 0.75rem; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 0.5rem 0.5rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: none; }
+  code, .mono { font: 0.82rem ui-monospace, monospace; word-break: break-all; }
+  pre { margin: 0; padding: 0.75rem; overflow-x: auto; border: 1px solid var(--border); border-radius: 0.4rem; background: var(--bg); font: 0.8rem/1.45 ui-monospace, monospace; }
+  input, select { width: 100%; min-width: 8rem; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 0.35rem; background: var(--bg); color: var(--text); font: inherit; }
+  button { padding: 0.4rem 0.85rem; border: 1px solid var(--border); border-radius: 0.35rem; background: var(--card); color: var(--text); font: inherit; cursor: pointer; white-space: nowrap; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.danger { color: var(--danger); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; align-items: baseline; }
+  .grid dt { color: var(--muted); } .grid dd { margin: 0; }
+  .empty { color: var(--muted); font-style: italic; }
+  .notice { padding: 0.6rem 0.75rem; border-left: 3px solid var(--accent); background: var(--bg); color: var(--text); margin-bottom: 0.75rem; }
+  .notice.warn { border-color: var(--danger); }
+  .muted { color: var(--muted); }
+  #toast { position: fixed; right: 1rem; bottom: 1rem; max-width: 24rem; padding: 0.6rem 0.9rem; border-radius: 0.4rem; background: var(--text); color: var(--bg); }
+  #toast.error { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>User Mappings</h1>
+  <div id="fatal" class="notice warn" hidden></div>
+
+  <section id="setup" hidden>
+    <h2>Identity provider</h2>
+    <div id="setup-status"></div>
+    <dl class="grid">
+      <dt>Redirect URI</dt><dd><code id="redirect-uri"></code></dd>
+      <dt>Login link</dt><dd><code id="login-url"></code></dd>
+    </dl>
+    <details>
+      <summary class="muted">Authelia client example</summary>
+      <pre id="authelia-example"></pre>
+    </details>
+  </section>
+
+  <section id="unmapped-section" hidden>
+    <h2>Waiting to be mapped</h2>
+    <p>Signed in at the identity provider, but not mapped to a Shoko user, so they were turned away. Only kept in memory.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Who</th><th>Subject</th><th>Last tried</th><th>Shoko user</th><th></th></tr></thead>
+      <tbody id="unmapped"></tbody>
+    </table></div>
+  </section>
+
+  <section id="mappings-section" hidden>
+    <h2>Mappings</h2>
+    <p>Each subject signs in as the Shoko user it is mapped to. Removing a mapping stops new logins; API keys already handed out stay valid until they expire or are revoked.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Subject</th><th>Shoko user</th><th>Note</th><th></th></tr></thead>
+      <tbody id="mappings"></tbody>
+    </table></div>
+  </section>
+
+  <section id="add-section" hidden>
+    <h2>Add a mapping by hand</h2>
+    <p>For a subject you already know, e.g. from the identity provider's logs.</p>
+    <form id="add-form" class="row">
+      <input id="add-subject" class="mono" placeholder="Subject (sub claim)" required>
+      <select id="add-user" required></select>
+      <input id="add-note" placeholder="Note (optional)">
+      <button class="primary" type="submit">Add</button>
+    </form>
+  </section>
+</main>
+<div id="toast" hidden></div>
+
+<script nonce="{{nonce}}">
+(function () {
+  'use strict';
+  var api = '/api/plugin/OIDC';
+  var state = null;
+
+  function getApiKey() {
+    try {
+      var session = JSON.parse(sessionStorage.getItem('state') || '{}');
+      if (session && session.apiSession && session.apiSession.apikey) return session.apiSession.apikey;
+    } catch (e) { /* fall through */ }
+    try {
+      var stored = JSON.parse(localStorage.getItem('apiSession') || '{}');
+      if (stored && stored.apikey) return stored.apikey;
+    } catch (e) { /* fall through */ }
+    return null;
+  }
+
+  function el(tag, props, children) {
+    var node = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (key) {
+      if (key === 'text') node.textContent = props[key];
+      else if (key === 'class') node.className = props[key];
+      else if (key.slice(0, 2) === 'on') node.addEventListener(key.slice(2), props[key]);
+      else node[key] = props[key];
+    });
+    (children || []).forEach(function (child) { if (child) node.appendChild(child); });
+    return node;
+  }
+
+  var toastTimer = null;
+  function toast(message, isError) {
+    var node = document.getElementById('toast');
+    node.textContent = message;
+    node.className = isError ? 'error' : '';
+    node.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { node.hidden = true; }, 4000);
+  }
+
+  function fatal(message) {
+    var node = document.getElementById('fatal');
+    node.textContent = message;
+    node.hidden = false;
+  }
+
+  function request(method, path, body) {
+    var headers = { apikey: getApiKey() || '' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    return fetch(api + path, { method: method, headers: headers, body: body === undefined ? undefined : JSON.stringify(body) })
+      .then(function (response) {
+        if (response.ok) return response.status === 204 ? null : response.json();
+        return response.text().then(function (text) {
+          var message = text;
+          try {
+            var problem = JSON.parse(text);
+            message = problem.detail || problem.title || (problem.errors && Object.values(problem.errors).flat().join(' ')) || text;
+          } catch (e) { /* not JSON */ }
+          var error = new Error(message || ('Request failed with ' + response.status));
+          error.status = response.status;
+          throw error;
+        });
+      });
+  }
+
+  function userSelect(selectedID, includePlaceholder) {
+    var select = el('select');
+    if (includePlaceholder) select.appendChild(el('option', { value: '', text: 'Pick a user…' }));
+    state.Users.forEach(function (user) {
+      select.appendChild(el('option', { value: String(user.ID), text: user.Username + (user.IsAdmin ? ' (admin)' : ''), selected: user.ID === selectedID }));
+    });
+    if (selectedID && !state.Users.some(function (user) { return user.ID === selectedID; }))
+      select.appendChild(el('option', { value: String(selectedID), text: 'Missing user #' + selectedID, selected: true }));
+    return select;
+  }
+
+  function describe(entry) {
+    var parts = [entry.PreferredUsername, entry.Name, entry.Email].filter(function (part, index, all) { return part && all.indexOf(part) === index; });
+    return parts.length ? parts.join(' · ') : 'Unknown';
+  }
+
+  function saveMapping(subject, userID, note, button) {
+    if (!userID) { toast('Pick a Shoko user first.', true); return Promise.resolve(); }
+    if (button) button.disabled = true;
+    return request('PUT', '/Admin/Mapping', { Subject: subject, UserID: Number(userID), Note: note || null })
+      .then(function () { toast('Mapping saved.'); return load(); })
+      .catch(function (error) { toast(error.message, true); })
+      .finally(function () { if (button) button.disabled = false; });
+  }
+
+  function renderSetup() {
+    document.getElementById('setup').hidden = false;
+    var status = document.getElementById('setup-status');
+    status.textContent = '';
+    if (!state.IsConfigured) {
+      status.appendChild(el('div', { class: 'notice warn', text: 'Not set up yet. Set the issuer URL and client ID in the plugin\'s settings.' }));
+    } else {
+      status.appendChild(el('p', { text: 'Signing in with ' + state.Issuer + ' as client "' + state.ClientID + '".' }));
+    }
+    if (state.RedirectUriFromRequest) {
+      status.appendChild(el('div', { class: 'notice', text: 'The redirect URI below is built from the address you opened this page on. If Shoko is behind a reverse proxy, set the Public URL in the plugin\'s settings so it does not change with how the server is reached.' }));
+    }
+    document.getElementById('redirect-uri').textContent = state.RedirectUri;
+    document.getElementById('login-url').textContent = state.LoginUrl;
+    document.getElementById('authelia-example').textContent = [
+      'identity_providers:',
+      '  oidc:',
+      '    clients:',
+      "      - client_id: '" + (state.ClientID || 'shoko') + "'",
+      "        client_name: 'Shoko'",
+      "        client_secret: '$pbkdf2-sha512$...' # authelia crypto hash generate pbkdf2",
+      "        authorization_policy: 'two_factor'",
+      '        require_pkce: true',
+      "        pkce_challenge_method: 'S256'",
+      '        redirect_uris:',
+      "          - '" + state.RedirectUri + "'",
+      "        scopes: ['openid', 'profile', 'email']",
+      "        response_types: ['code']",
+      "        grant_types: ['authorization_code']",
+      "        token_endpoint_auth_method: 'client_secret_basic'",
+    ].join('\n');
+  }
+
+  function renderUnmapped() {
+    var body = document.getElementById('unmapped');
+    body.textContent = '';
+    document.getElementById('unmapped-section').hidden = false;
+    if (!state.Unmapped.length) {
+      body.appendChild(el('tr', null, [el('td', { colSpan: 5, class: 'empty', text: 'Nobody is waiting. A subject shows up here after it tries to sign in.' })]));
+      return;
+    }
+    state.Unmapped.forEach(function (entry) {
+      var select = userSelect(null, true);
+      var mapButton = el('button', { class: 'primary', type: 'button', text: 'Map' });
+      mapButton.addEventListener('click', function () { saveMapping(entry.Subject, select.value, describe(entry) === 'Unknown' ? null : describe(entry), mapButton); });
+      var dismissButton = el('button', { type: 'button', text: 'Dismiss' });
+      dismissButton.addEventListener('click', function () {
+        request('DELETE', '/Admin/Unmapped?subject=' + encodeURIComponent(entry.Subject)).then(load).catch(function (error) { toast(error.message, true); });
+      });
+      body.appendChild(el('tr', null, [
+        el('td', { text: describe(entry) }),
+        el('td', null, [el('code', { text: entry.Subject })]),
+        el('td', { text: new Date(entry.LastSeenAt).toLocaleString() + (entry.Attempts > 1 ? ' (' + entry.Attempts + '×)' : '') }),
+        el('td', null, [select]),
+        el('td', null, [el('div', { class: 'row' }, [mapButton, dismissButton])]),
+      ]));
+    });
+  }
+
+  function renderMappings() {
+    var body = document.getElementById('mappings');
+    body.textContent = '';
+    document.getElementById('mappings-section').hidden = false;
+    if (!state.Mappings.length) {
+      body.appendChild(el('tr', null, [el('td', { colSpan: 4, class: 'empty', text: 'No mappings yet, so nobody can sign in.' })]));
+      return;
+    }
+    state.Mappings.forEach(function (mapping) {
+      var select = userSelect(mapping.UserID, false);
+      var note = el('input', { value: mapping.Note || '', placeholder: 'Note' });
+      var saveButton = el('button', { type: 'button', text: 'Save' });
+      saveButton.addEventListener('click', function () { saveMapping(mapping.Subject, select.value, note.value, saveButton); });
+      var removeButton = el('button', { class: 'danger', type: 'button', text: 'Remove' });
+      removeButton.addEventListener('click', function () {
+        if (removeButton.dataset.confirm !== '1') {
+          removeButton.dataset.confirm = '1';
+          removeButton.textContent = 'Really remove?';
+          setTimeout(function () { removeButton.dataset.confirm = ''; removeButton.textContent = 'Remove'; }, 3000);
+          return;
+        }
+        removeButton.disabled = true;
+        request('DELETE', '/Admin/Mapping?subject=' + encodeURIComponent(mapping.Subject))
+          .then(function () { toast('Mapping removed.'); return load(); })
+          .catch(function (error) { toast(error.message, true); removeButton.disabled = false; });
+      });
+      body.appendChild(el('tr', null, [
+        el('td', null, [el('code', { text: mapping.Subject })]),
+        el('td', null, [select]),
+        el('td', null, [note]),
+        el('td', null, [el('div', { class: 'row' }, [saveButton, removeButton])]),
+      ]));
+    });
+  }
+
+  function renderAdd() {
+    document.getElementById('add-section').hidden = false;
+    var current = document.getElementById('add-user');
+    var replacement = userSelect(null, true);
+    replacement.id = 'add-user';
+    replacement.required = true;
+    current.replaceWith(replacement);
+  }
+
+  function load() {
+    return request('GET', '/Admin').then(function (data) {
+      state = data;
+      renderSetup();
+      renderUnmapped();
+      renderMappings();
+      renderAdd();
+    });
+  }
+
+  document.getElementById('add-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var subject = document.getElementById('add-subject').value.trim();
+    if (!subject) return;
+    saveMapping(subject, document.getElementById('add-user').value, document.getElementById('add-note').value.trim(), event.submitter)
+      .then(function () { document.getElementById('add-subject').value = ''; document.getElementById('add-note').value = ''; });
+  });
+
+  if (!getApiKey()) {
+    fatal('Open this page from the Web UI\'s settings while signed in as an admin.');
+    return;
+  }
+  load().catch(function (error) {
+    if (error.status === 401) fatal('Your session has expired. Sign in to the Web UI again.');
+    else if (error.status === 403) fatal('Only admins can manage user mappings.');
+    else fatal('Could not load the mappings: ' + error.message);
+  });
+})();
+</script>
+</body>
+</html>
