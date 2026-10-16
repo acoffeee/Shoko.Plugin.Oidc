@@ -10,7 +10,7 @@ public static class Constants
     /// <summary>
     ///   The plugin's ID. Has to match <c>id</c> in <c>manifest.json</c>.
     /// </summary>
-    public static readonly Guid PluginGuid = new("03000000-0000-0000-0000-000000200000");
+    public static readonly Guid PluginGuid = new("c7dbd592-a764-438b-8a17-6fddd45f4c26");
 
     /// <summary>
     ///   The plugin's friendly name.
