@@ -47,6 +47,14 @@ The `id` must match `PluginGuid` in [`source/Constants.cs`](source/Constants.cs)
 Do not change it once a release is out: Shoko would see a different plugin
 and installs would stop updating.
 
+## The userscript
+
+[`userscripts/shoko-sso-button.user.js`](userscripts/shoko-sso-button.user.js)
+is not part of the release zip or the manifest. Users install it from its
+raw URL on `master`, so a change to it goes out as soon as it is pushed.
+Bump its `@version` with each change, or userscript managers will not see
+an update.
+
 ## Testing a release locally
 
 This runs the same build into a scratch folder without touching the real

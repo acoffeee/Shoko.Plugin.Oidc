@@ -89,6 +89,22 @@ session, so set the lifetime to 0 if you create API keys from the Web UI.
 Removing a mapping stops new logins only; revoke the keys already handed
 out from the Web UI's API key settings.
 
+## A login button for the Web UI
+
+The Web UI's login page has no button for the plugin. The userscript in
+[`userscripts/shoko-sso-button.user.js`](userscripts/shoko-sso-button.user.js)
+adds a **Login with SSO** button under the password form, which opens
+`/plugin/OIDC/login` and keeps any `?redirectTo=` from the Web UI.
+
+To install it, put a userscript manager such as Tampermonkey or
+Violentmonkey in your browser, then open
+[the raw script](https://raw.githubusercontent.com/acoffeee/Shoko.Plugin.Oidc/master/userscripts/shoko-sso-button.user.js);
+the manager offers to install it.
+
+It runs on every page whose path contains `/webui/`. To keep it to your own
+server, change its `@match` line to your Shoko address, e.g.
+`https://shoko.example.com/webui/*`.
+
 ## Pairing a device
 
 A device that cannot open a browser itself, such as a TV app, can be paired.
