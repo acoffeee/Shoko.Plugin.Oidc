@@ -103,6 +103,11 @@ public class OidcApiController(
             config.IsConfigured(),
             config.Issuer,
             config.ClientID,
+            // Named as the provider's client has to name it. A client that is
+            // set up but has no secret is a public one.
+            string.IsNullOrEmpty(config.ClientSecret) && config.IsConfigured()
+                ? "none"
+                : config.TokenEndpointAuthMethod is TokenEndpointAuthMethod.ClientSecretPost ? "client_secret_post" : "client_secret_basic",
             OidcLoginService.GetRedirectUri(config, Request),
             OidcLoginService.GetBaseUrl(config, Request) + Constants.LoginPath,
             string.IsNullOrWhiteSpace(config.PublicUrl),
@@ -222,6 +227,7 @@ public sealed record AdminState(
     bool IsConfigured,
     string? Issuer,
     string? ClientID,
+    string TokenEndpointAuthMethod,
     string RedirectUri,
     string LoginUrl,
     bool RedirectUriFromRequest,

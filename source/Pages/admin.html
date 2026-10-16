@@ -191,13 +191,19 @@
     }
     document.getElementById('redirect-uri').textContent = state.RedirectUri;
     document.getElementById('login-url').textContent = state.LoginUrl;
+    // Follows the plugin's own settings, so the client it describes is one
+    // the plugin can sign in with.
+    var isPublic = state.TokenEndpointAuthMethod === 'none';
     document.getElementById('authelia-example').textContent = [
       'identity_providers:',
       '  oidc:',
       '    clients:',
       "      - client_id: '" + (state.ClientID || 'shoko') + "'",
       "        client_name: 'Shoko'",
-      "        client_secret: '$pbkdf2-sha512$...' # authelia crypto hash generate pbkdf2",
+    ].concat(isPublic
+      ? ['        public: true']
+      : ["        client_secret: '$pbkdf2-sha512$...' # authelia crypto hash generate pbkdf2"]
+    ).concat([
       "        authorization_policy: 'two_factor'",
       '        require_pkce: true',
       "        pkce_challenge_method: 'S256'",
@@ -206,8 +212,8 @@
       "        scopes: ['openid', 'profile', 'email']",
       "        response_types: ['code']",
       "        grant_types: ['authorization_code']",
-      "        token_endpoint_auth_method: 'client_secret_basic'",
-    ].join('\n');
+      "        token_endpoint_auth_method: '" + state.TokenEndpointAuthMethod + "'",
+    ]).join('\n');
   }
 
   function renderUnmapped() {
