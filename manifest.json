@@ -11,6 +11,22 @@
   ],
   "releases": [
     {
+      "version": "1.0.1",
+      "tag": "v1.0.1",
+      "released_at": "2026-10-16T02:50:41.864068Z",
+      "channel": "Stable",
+      "release_notes": "The example Authelia client on the User Mappings page now follows the plugin\u0027s settings: it shows the configured token endpoint auth method, and a public client when no client secret is set. It used to always show \u0060client_secret_basic\u0060.\n\nRequires Shoko Server with abstractions \u00606.0.0-alpha.97\u0060 or newer.",
+      "dependencies": [],
+      "archives": [
+        {
+          "runtime": "any",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/acoffeee/Shoko.Plugin.Oidc/releases/download/v1.0.1/OpenIDConnect-v1.0.1-any.zip",
+          "checksum": "sha256:58d695cfc51610918e6dbf4db6c78a219f6c0053915c5291b1597c3b81ae3387"
+        }
+      ]
+    },
+    {
       "version": "1.0.0",
       "tag": "v1.0.0",
       "released_at": "2026-10-16T02:45:43.6771358Z",
