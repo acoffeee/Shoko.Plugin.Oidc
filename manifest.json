@@ -1,10 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/ShokoAnime/ShokoServer/master/Shoko.BuildTools/manifest.schema.json",
-  "id": "c7dbd592-a764-438b-8a17-6fddd45f4c26",
   "type": "package",
+  "id": "c7dbd592-a764-438b-8a17-6fddd45f4c26",
   "name": "OpenID Connect",
   "overview": "Sign in to Shoko through an OpenID Connect provider such as Authelia, with each subject mapped by hand to a Shoko user.",
   "authors": "coffeee",
   "repository_url": "https://github.com/acoffeee/Shoko.Plugin.Oidc",
-  "releases": []
+  "tags": [
+    "service-registration"
+  ],
+  "releases": [
+    {
+      "version": "1.0.0",
+      "tag": "v1.0.0",
+      "released_at": "2026-10-16T02:45:43.6771358Z",
+      "channel": "Stable",
+      "release_notes": "First release. Sign in to Shoko through an OpenID Connect provider such as Authelia, with each provider subject mapped by hand to a Shoko user. Devices that cannot open a browser, such as TV apps, can be paired with a code.\n\nRequires Shoko Server with abstractions \u00606.0.0-alpha.97\u0060 or newer.",
+      "dependencies": [],
+      "archives": [
+        {
+          "runtime": "any",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/acoffeee/Shoko.Plugin.Oidc/releases/download/v1.0.0/OpenIDConnect-v1.0.0-any.zip",
+          "checksum": "sha256:66e1ff133adbf1b3b9c783387b47adff1fb68a4db66624902d5b0959c515a035"
+        }
+      ]
+    }
+  ]
 }
