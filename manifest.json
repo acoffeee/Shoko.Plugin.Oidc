@@ -4,7 +4,7 @@
   "type": "package",
   "name": "OpenID Connect",
   "overview": "Sign in to Shoko through an OpenID Connect provider such as Authelia, with each subject mapped by hand to a Shoko user.",
-  "authors": "",
+  "authors": "coffeee",
   "repository_url": "https://github.com/acoffeee/Shoko.Plugin.Oidc",
   "releases": []
 }
