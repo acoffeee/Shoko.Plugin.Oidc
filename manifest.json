@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/ShokoAnime/ShokoServer/master/Shoko.BuildTools/manifest.schema.json",
-  "id": "03000000-0000-0000-0000-000000200000",
+  "id": "c7dbd592-a764-438b-8a17-6fddd45f4c26",
   "type": "package",
   "name": "OpenID Connect",
   "overview": "Sign in to Shoko through an OpenID Connect provider such as Authelia, with each subject mapped by hand to a Shoko user.",
