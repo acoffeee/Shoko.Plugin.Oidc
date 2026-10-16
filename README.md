@@ -1,3 +1,5 @@
+> [!WARNING]
+> **Disclaimer** This entire project is vibe coded and not reviewed and NOT garunteed to be secure or safe. It was more or less made so i didnt have to type in passwords cause thats alot of work and asking claude to make me this was not.
 # Shoko OpenID Connect
 
 Sign in to Shoko through an OpenID Connect provider, such as Authelia, with
