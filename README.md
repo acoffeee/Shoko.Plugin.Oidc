@@ -23,9 +23,22 @@ that is not mapped cannot sign in.
 4. An unmapped subject is turned away with its subject shown, and is listed
    on the **User Mappings** page for an admin to map.
 
+## Installing
+
+Add this manifest URL as a plugin repository in Shoko:
+
+```
+https://raw.githubusercontent.com/acoffeee/Shoko.Plugin.Oidc/metadata/manifest.json
+```
+
+Shoko then lists the plugin and its releases, and can install and update
+it from there. Each release's zip is also attached to its
+[GitHub release](https://github.com/acoffeee/Shoko.Plugin.Oidc/releases),
+for installing by hand into the server's `plugins` folder.
+
 ## Setting it up with Authelia
 
-1. Install the plugin and restart Shoko.
+1. Install the plugin (see [Installing](#installing)) and restart Shoko.
 2. In the Web UI, open the plugin's settings and set the **Issuer URL** (e.g.
    `https://auth.example.com`), **Client ID**, **Client Secret** and, if
    Shoko is behind a reverse proxy, the **Public URL** (e.g.
@@ -103,7 +116,4 @@ dotnet build
 ```
 
 Copy `source/bin/Debug/net10.0` into the server's `plugins` folder to try
-it. Releases are built by `.github/workflows/release.yml` when a GitHub
-release is published: bump `<Version>` in the `.csproj` and publish a
-release tagged `v<Version>`. Before the first release, create a branch named
-`metadata` holding a copy of `manifest.json` with your identity filled in.
+it. See [RELEASING.md](RELEASING.md) for how releases are made.
