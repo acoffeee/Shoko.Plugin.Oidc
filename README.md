@@ -1,6 +1,9 @@
-> [!WARNING]
-> **Disclaimer** This entire project is vibe coded and not reviewed and NOT garunteed to be secure or safe. It was more or less made so i didnt have to type in passwords cause thats alot of work and asking claude to make me this was not.
+> ### **Disclaimer **
+> This entire project is vibe coded and not reviewed and NOT garunteed to be secure or safe. It was more or less made so i didnt have to type in passwords cause thats alot of work and asking claude to make me this was not.
 # Shoko OpenID Connect
+
+A plugin for [Shoko](https://shokoanime.com/), built from the
+[Shoko Plugin Template](https://github.com/ShokoAnime/Plugin-Template).
 
 Sign in to Shoko through an OpenID Connect provider, such as Authelia, with
 passkeys or whatever else the provider supports. Shoko stays the source of
