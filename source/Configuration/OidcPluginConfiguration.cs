@@ -15,7 +15,7 @@ namespace Shoko.Plugin.Oidc.Configuration;
 ///   subjects may sign in as which Shoko user.
 /// </summary>
 [Display(Name = "OpenID Connect")]
-public class OidcPluginConfiguration : IConfiguration, IConfigurationWithCustomValidation<OidcPluginConfiguration>
+public class OidcPluginConfiguration : IPluginConfiguration, IVisibleConfiguration, IConfigurationWithCustomValidation<OidcPluginConfiguration>
 {
     /// <summary>
     ///   The issuer URL of the identity provider.
@@ -210,6 +210,7 @@ public class UserMapping
     ///   The <c>sub</c> claim of the identity provider.
     /// </summary>
     [Display(Name = "Subject", Description = "The `sub` claim. For Authelia, an opaque UUID per user.")]
+    [Key]
     [Required]
     public string Subject { get; set; } = string.Empty;
 

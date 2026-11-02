@@ -14,7 +14,7 @@ using Shoko.Plugin.Oidc.Services;
 namespace Shoko.Plugin.Oidc;
 
 /// <inheritdoc/>
-public class Plugin : IPlugin, IPluginServiceRegistration
+public class Plugin : IPlugin<OidcPluginConfiguration>, IPluginServiceRegistration
 {
     private ConfigurationProvider<OidcPluginConfiguration>? _configurationProvider;
 

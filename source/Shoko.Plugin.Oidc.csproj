@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Shoko.Abstractions" Version="6.0.0-alpha.97" ExcludeAssets="runtime" />
+        <PackageReference Include="Shoko.Abstractions" Version="6.0.0-alpha.124" ExcludeAssets="runtime" />
         <PackageReference Include="Shoko.BuildTools.Targets" Version="0.3.0" PrivateAssets="All" ExcludeAssets="runtime" />
     </ItemGroup>
 
